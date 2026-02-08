@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Skolberga HVB">
+    <title>Skolberga HVB - Uppföljningssystem</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        
+        header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .header-content {
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        h1 {
+            font-size: 24px;
+            color: #1e293b;
+            font-family: Georgia, serif;
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            color: #475569;
+        }
+        
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+        
+        .tab-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .content {
+            padding: 20px 0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary:active {
+            background: #f1f5f9;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        @media (min-width: 768px) {
+            .grid-2 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        th {
+            background: #f8fafc;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #475569;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tr:hover {
+            background: #f8fafc;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            padding: 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        
+        .icon-btn:hover {
+            background: #f1f5f9;
+        }
+        
+        .icon-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .kpi-card {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+        
+        .kpi-card.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .kpi-card.purple {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+        
+        .kpi-card.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .kpi-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+        }
+        
+        .kpi-unit {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+        
+        .stat-item {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .stat-grid {
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .stat-label {
+            color: #64748b;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+        }
+        
+        .stat-value.green { color: #10b981; }
+        .stat-value.red { color: #ef4444; }
+        .stat-value.gray { color: #64748b; }
+        
+        .period-select {
+            margin-bottom: 24px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+        
+        .bar-chart {
+            margin: 24px 0;
+        }
+        
+        .bar-item {
+            margin-bottom: 20px;
+        }
+        
+        .bar-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1e293b;
+        }
+        
+        .bar-container {
+            background: #f1f5f9;
+            border-radius: 8px;
+            height: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+        
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .info-box ul {
+            color: #1e3a8a;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-left: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.3);
+            z-index: 2000;
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Skolberga HVB</h1>
+                <div class="subtitle">Uppföljningssystem</div>
+            </div>
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('register')">Registrera</button>
+                <button class="tab-btn" onclick="switchTab('stats')">Statistik</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <!-- REGISTRERA TAB -->
+            <div id="register" class="tab-content active">
+                <button class="btn-primary" onclick="openForm()" style="margin-bottom: 20px;">
+                    ➕ Ny mätning
+                </button>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 16px; color: #1e293b;">Registrerade mätningar</h3>
+                    <div id="measurementsLoading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Laddar mätningar...</p>
+                    </div>
+                    <div id="measurementsContainer" style="display: none; overflow-x: auto;">
+                        <table id="measurementsTable">
+                            <thead>
+                                <tr>
+                                    <th>Brukare</th>
+                                    <th>Datum</th>
+                                    <th>Tillfälle</th>
+                                    <th style="text-align: center;">VAS LK</th>
+                                    <th style="text-align: center;">VAS PM</th>
+                                    <th style="text-align: center;">WHODAS</th>
+                                    <th style="text-align: center;">AUDIT</th>
+                                    <th style="text-align: center;">DUDIT</th>
+                                    <th style="text-align: right;">Åtgärder</th>
+                                </tr>
+                            </thead>
+                            <tbody id="measurementsList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATISTIK TAB -->
+            <div id="stats" class="tab-content">
+                <div class="period-select">
+                    <select id="periodSelect" onchange="updateStats()" style="max-width: 300px;">
+                        <option value="all">Hela perioden</option>
+                        <option value="3m">Senaste 3 månaderna</option>
+                        <option value="6m">Senaste 6 månaderna</option>
+                        <option value="12m">Senaste 12 månaderna</option>
+                    </select>
+                </div>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Aktiva brukare</div>
+                        <div class="kpi-value" id="kpiUsers">-</div>
+                    </div>
+                    <div class="kpi-card green">
+                        <div class="kpi-label">VAS Livskvalitet</div>
+                        <div class="kpi-value" id="kpiLivskvalitet">-</div>
+                        <div class="kpi-unit">av 10 möjliga</div>
+                    </div>
+                    <div class="kpi-card purple">
+                        <div class="kpi-label">VAS Mående</div>
+                        <div class="kpi-value" id="kpiMaende">-</div>
+                        <div class="kpi-unit">av 10 möjliga</div>
+                    </div>
+                    <div class="kpi-card orange">
+                        <div class="kpi-label">Mätningar</div>
+                        <div class="kpi-value" id="kpiMeasurements">-</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: 8px; color: #1e293b;">Förbättring per instrument (%)</h3>
+                    <p style="font-size: 13px; color: #64748b; margin-bottom: 20px;" id="periodLabel"></p>
+                    
+                    <div id="improvementChart" class="bar-chart"></div>
+                    
+                    <div id="improvementDetails" class="grid grid-3" style="margin-top: 24px;"></div>
+                </div>
+
+                <div class="info-box">
+                    <h4>Om statistiken</h4>
+                    <ul>
+                        <li><strong>Förbättring:</strong> Andel brukare som visar positiv utveckling i mätperioden</li>
+                        <li><strong>VAS-instrument:</strong> Förbättring = ökning med minst 1 poäng (0-10 skala)</li>
+                        <li><strong>WHODAS/AUDIT/DUDIT:</strong> Förbättring = minskning med minst 3-5 poäng</li>
+                        <li><strong>Periodval:</strong> Välj period ovan för att filtrera data</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FÖR FORMULÄR -->
+    <div id="formModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="formTitle" style="color: #1e293b;">Ny mätning</h2>
+            </div>
+            <div class="modal-body">
+                <form id="measurementForm" onsubmit="saveMeasurement(event)">
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label>Brukare-ID *</label>
+                            <input type="text" id="brukarId" required placeholder="T.ex. B001">
+                        </div>
+                        <div class="form-group">
+                            <label>Mätdatum *</label>
+                            <input type="date" id="datum" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Mättillfälle *</label>
+                            <select id="tillfalle" required>
+                                <option>Inskrivning</option>
+                                <option>Månad 1</option>
+                                <option>Månad 2</option>
+                                <option>Månad 3</option>
+                                <option>Månad 6</option>
+                                <option>Månad 9</option>
+                                <option>Månad 12</option>
+                                <option>Utskrivning</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Registrerad av *</label>
+                            <input type="text" id="registreradAv" required placeholder="Ditt namn">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 24px 0 16px; color: #1e293b;">Mätvärden</h4>
+                    
+                    <div class="grid grid-3">
+                        <div class="form-group">
+                            <label>VAS Livskvalitet (0-10) *</label>
+                            <input type="number" id="vasLivskvalitet" step="0.1" min="0" max="10" required>
+                            <div class="hint">Högre = bättre</div>
+                        </div>
+                        <div class="form-group">
+                            <label>VAS Psykiskt mående (0-10) *</label>
+                            <input type="number" id="vasMaende" step="0.1" min="0" max="10" required>
+                            <div class="hint">Högre = bättre</div>
+                        </div>
+                        <div class="form-group">
+                            <label>WHODAS 2.0 (0-100) *</label>
+                            <input type="number" id="whodas" step="0.1" min="0" max="100" required>
+                            <div class="hint">Lägre = bättre</div>
+                        </div>
+                        <div class="form-group">
+                            <label>AUDIT (0-40) *</label>
+                            <input type="number" id="audit" step="1" min="0" max="40" required>
+                            <div class="hint">Lägre = bättre</div>
+                        </div>
+                        <div class="form-group">
+                            <label>DUDIT (0-44) *</label>
+                            <input type="number" id="dudit" step="1" min="0" max="44" required>
+                            <div class="hint">Lägre = bättre</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Anteckningar (valfritt)</label>
+                        <textarea id="anteckningar" rows="3" placeholder="T.ex. särskilda omständigheter vid mätningen..."></textarea>
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn-secondary" onclick="closeForm()">Avbryt</button>
+                        <button type="submit" class="btn-primary" id="submitBtn">Spara mätning</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
