@@ -1,4 +1,4 @@
-// Skolberga HVB - Huvudapplikation
+// Skolberga HVB - Huvudapplikation (Apps Script version)
 let measurements = [];
 let editingRow = null;
 
@@ -8,42 +8,34 @@ document.addEventListener('DOMContentLoaded', () => {
     loadMeasurements();
 });
 
-// Google Sheets API functions
+// Google Apps Script functions
 async function loadMeasurements() {
     try {
         showLoading(true);
         
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}!A:M?key=${CONFIG.API_KEY}`;
+        const response = await fetch(CONFIG.SCRIPT_URL);
+        const result = await response.json();
         
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        if (!result.success) {
+            throw new Error(result.error || 'Okänt fel');
         }
         
-        const data = await response.json();
-        
-        if (data.values && data.values.length > 1) {
-            // Skip header row, convert to objects
-            measurements = data.values.slice(1).map((row, index) => ({
-                row: index + 2, // +2 because index starts at 0 and we skip header
-                brukarId: row[0] || '',
-                datum: row[1] || '',
-                tillfalle: row[2] || '',
-                vasLivskvalitet: parseFloat(row[3]) || 0,
-                vasMaende: parseFloat(row[4]) || 0,
-                whodas: parseFloat(row[5]) || 0,
-                audit: parseFloat(row[6]) || 0,
-                dudit: parseFloat(row[7]) || 0,
-                anteckningar: row[8] || '',
-                registreradAv: row[9] || '',
-                registreringsdatum: row[10] || '',
-                timestamp: row[11] || '',
-                id: row[12] || ''
-            }));
-        } else {
-            measurements = [];
-        }
+        // Konvertera data till rätt format
+        measurements = result.data.map((row, index) => ({
+            row: index + 2, // +2 för header rad
+            brukarId: row['Brukare-ID'] || '',
+            datum: row['Datum'] || '',
+            tillfalle: row['Mättillfälle'] || '',
+            vasLivskvalitet: parseFloat(row['VAS Livskvalitet']) || 0,
+            vasMaende: parseFloat(row['VAS Mående']) || 0,
+            whodas: parseFloat(row['WHODAS']) || 0,
+            audit: parseFloat(row['AUDIT']) || 0,
+            dudit: parseFloat(row['DUDIT']) || 0,
+            anteckningar: row['Anteckningar'] || '',
+            registreradAv: row['Registrerad av'] || '',
+            registreringsdatum: row['Registreringsdatum'] || '',
+            timestamp: row['Timestamp'] || '',            id: row['ID'] || ''
+        }));
         
         renderMeasurements();
         updateStats();
@@ -52,7 +44,7 @@ async function loadMeasurements() {
     } catch (error) {
         console.error('Error loading measurements:', error);
         showLoading(false);
-        showToast('Fel vid laddning av data. Kontrollera att Google Sheet är korrekt delat.');
+        showToast('Fel vid laddning av data: ' + error.message);
     }
 }
 
@@ -62,53 +54,32 @@ async function saveMeasurementToSheet(measurement) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Sparar...';
         
-        const timestamp = new Date().toISOString();
-        const id = measurement.id || timestamp;
+        const data = {
+            action: 'save',
+            brukarId: measurement.brukarId,
+            datum: measurement.datum,
+            tillfalle: measurement.tillfalle,
+            vasLivskvalitet: measurement.vasLivskvalitet,
+            vasMaende: measurement.vasMaende,
+            whodas: measurement.whodas,
+            audit: measurement.audit,
+            dudit: measurement.dudit,
+            anteckningar: measurement.anteckningar,
+            registreradAv: measurement.registreradAv,
+            registreringsdatum: measurement.registreringsdatum,
+            id: measurement.id || new Date().getTime().toString(),
+            rowIndex: editingRow || null
+        };
         
-        const row = [
-            measurement.brukarId,
-            measurement.datum,
-            measurement.tillfalle,
-            measurement.vasLivskvalitet,
-            measurement.vasMaende,
-            measurement.whodas,
-            measurement.audit,
-            measurement.dudit,
-            measurement.anteckningar,
-            measurement.registreradAv,
-            measurement.registreringsdatum,
-            timestamp,
-            id
-        ];
-        
-        let url, method, body;
-        
-        if (editingRow) {
-            // Update existing row
-            url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}!A${editingRow}:M${editingRow}?valueInputOption=RAW&key=${CONFIG.API_KEY}`;
-            method = 'PUT';
-            body = JSON.stringify({
-                values: [row]
-            });
-        } else {
-            // Append new row
-            url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}!A:M:append?valueInputOption=RAW&key=${CONFIG.API_KEY}`;
-            method = 'POST';
-            body = JSON.stringify({
-                values: [row]
-            });
-        }
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: body
+        const response = await fetch(CONFIG.SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Okänt fel');
         }
         
         await loadMeasurements();
@@ -117,7 +88,7 @@ async function saveMeasurementToSheet(measurement) {
         
     } catch (error) {
         console.error('Error saving measurement:', error);
-        showToast('Fel vid sparande. Försök igen.');
+        showToast('Fel vid sparande: ' + error.message);
     } finally {
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.disabled = false;
@@ -129,18 +100,20 @@ async function deleteMeasurementFromSheet(rowIndex) {
     if (!confirm('Är du säker på att du vill ta bort denna mätning?')) return;
     
     try {
-        // Google Sheets API doesn't have a direct delete, so we clear the row
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${CONFIG.SHEET_NAME}!A${rowIndex}:M${rowIndex}:clear?key=${CONFIG.API_KEY}`;
+        const data = {
+            action: 'delete',
+            rowIndex: rowIndex
+        };
         
-        const response = await fetch(url, {
+        const response = await fetch(CONFIG.SCRIPT_URL, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
+            body: JSON.stringify(data)
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Okänt fel');
         }
         
         await loadMeasurements();
@@ -148,7 +121,7 @@ async function deleteMeasurementFromSheet(rowIndex) {
         
     } catch (error) {
         console.error('Error deleting measurement:', error);
-        showToast('Fel vid borttagning. Försök igen.');
+        showToast('Fel vid borttagning: ' + error.message);
     }
 }
 
